@@ -6,6 +6,20 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-03-30
+
+### Added
+
+-
+
+### Changed
+
+-
+
+### Fixed
+
+-
+
 ### Added
 
 - Template traceability via generated `TEMPLATE_VERSION` file.
