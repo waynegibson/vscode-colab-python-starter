@@ -15,11 +15,12 @@ Prerequisite: install Python 3.14.3 on macOS and confirm `python3.14 --version` 
    - `./scripts/new_case_study.sh --target '/path/to/case-study-repos' --git case-study-name`
    - Or create at an exact path: `./scripts/new_case_study.sh --path '/path/to/case-study-name' --git case-study-name`
 2. Open the generated case-study folder directly in VS Code.
-3. Use notebook kernel picker:
+3. Keep Pylance enabled and Ruff as formatter/linter.
+4. Use notebook kernel picker:
    - Colab kernel for online compute.
    - Local .venv kernel for offline execution.
-4. Keep interpreter stable from .vscode/settings.json.
-5. Optionally publish the local repo with `gh repo create` after review.
+5. Keep interpreter stable from .vscode/settings.json and switch only notebook kernel.
+6. Optionally publish the local repo with `gh repo create` after review.
 
 ## Template Repo Contents
 
@@ -32,6 +33,7 @@ Prerequisite: install Python 3.14.3 on macOS and confirm `python3.14 --version` 
 Each generated case-study repo contains only the working project payload:
 
 - `.vscode/settings.json`
+- `.vscode/extensions.json`
 - `.python-version`
 - `pyproject.toml`
 - `requirements.txt`
