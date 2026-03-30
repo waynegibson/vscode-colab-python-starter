@@ -1,0 +1,41 @@
+name: Bug Report
+description: Report a reproducible problem with the template or scripts
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting. Please provide enough detail to reproduce.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run command ...
+        2. Open file ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Template version
+      description: Value from generated TEMPLATE_VERSION file or repo tag/commit
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, shell version, Python version

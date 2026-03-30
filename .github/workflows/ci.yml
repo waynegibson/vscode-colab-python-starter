@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go for actionlint
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+
+      - name: Lint GitHub workflows
+        run: |
+          go install github.com/rhysd/actionlint/cmd/actionlint@latest
+          "$(go env GOPATH)/bin/actionlint" -color
+
+      - name: Install shell lint tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck zsh
+
+      - name: Lint scripts
+        run: |
+          shellcheck -s bash -e SC1091 scripts/new_case_study.sh scripts/bump_version.sh scripts/release_prepare.sh
+          zsh -n scripts/new_case_study.sh
+          zsh -n scripts/bump_version.sh
+          zsh -n scripts/release_prepare.sh
+
+      - name: Scaffold smoke test
+        run: |
+          tmp_dir="$(mktemp -d)"
+          ./scripts/new_case_study.sh --target "$tmp_dir" --git --no-bootstrap ci-smoke-case-study
+
+          project_dir="$tmp_dir/ci-smoke-case-study"
+
+          test -d "$project_dir/.git"
+          test -f "$project_dir/.vscode/settings.json"
+          test -f "$project_dir/.vscode/extensions.json"
+          test -f "$project_dir/pyproject.toml"
+          test -f "$project_dir/TEMPLATE_VERSION"
+
+          # Validate generated repo content, not just file existence.
+          grep -q '^name = "ci-smoke-case-study"$' "$project_dir/pyproject.toml"
+          grep -q '^description = "ci-smoke-case-study notebook project"$' "$project_dir/pyproject.toml"
+          grep -q '^template_version=' "$project_dir/TEMPLATE_VERSION"
+          grep -q '^template_commit=' "$project_dir/TEMPLATE_VERSION"
+          grep -q '^generated_at_utc=' "$project_dir/TEMPLATE_VERSION"
+          grep -q "\"python.defaultInterpreterPath\": \"\\\${workspaceFolder}/.venv/bin/python\"" "$project_dir/.vscode/settings.json"
+          grep -q '"python.languageServer": "Pylance"' "$project_dir/.vscode/settings.json"
+          grep -q '"charliermarsh.ruff"' "$project_dir/.vscode/extensions.json"
+
+          test ! -d "$project_dir/.venv"
+          test "$(git -C "$project_dir" symbolic-ref --short HEAD)" = "main"
+
+  release-precheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate changelog structure and version consistency
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          current_version="$(sed -nE 's/^version = "([0-9]+\.[0-9]+\.[0-9]+)"/\1/p' templates/case-study/pyproject.toml | head -n1)"
+          if [[ -z "$current_version" ]]; then
+            echo "Could not parse version from templates/case-study/pyproject.toml"
+            exit 1
+          fi
+
+          unreleased_count="$(grep -c '^## \[Unreleased\]' CHANGELOG.md)"
+          if [[ "$unreleased_count" -ne 1 ]]; then
+            echo "CHANGELOG.md must contain exactly one Unreleased section."
+            exit 1
+          fi
+
+          current_release_count="$(grep -Ec "^## \[$current_version\] - " CHANGELOG.md)"
+          if [[ "$current_release_count" -ne 1 ]]; then
+            echo "CHANGELOG.md must contain exactly one release heading for $current_version."
+            exit 1
+          fi
+
+          first_release="$(grep -E '^## \[[0-9]+\.[0-9]+\.[0-9]+\] - ' CHANGELOG.md | head -n1 | sed -E 's/^## \[([0-9]+\.[0-9]+\.[0-9]+)\].*/\1/')"
+          if [[ "$first_release" != "$current_version" ]]; then
+            echo "Most recent released changelog version ($first_release) must match pyproject version ($current_version)."
+            exit 1
+          fi
+
+          duplicate_versions="$(grep -E '^## \[[0-9]+\.[0-9]+\.[0-9]+\] - ' CHANGELOG.md | sed -E 's/^## \[([0-9]+\.[0-9]+\.[0-9]+)\].*/\1/' | sort | uniq -d)"
+          if [[ -n "$duplicate_versions" ]]; then
+            echo "Duplicate release versions found in CHANGELOG.md:"
+            echo "$duplicate_versions"
+            exit 1
+          fi
+
+          if awk '
+            BEGIN {
+              in_released_section = 0
+              bad = 0
+            }
+            /^## \[[0-9]+\.[0-9]+\.[0-9]+\] - / {
+              in_released_section = 1
+              next
+            }
+            /^## / {
+              in_released_section = 0
+              next
+            }
+            in_released_section && $0 ~ /^-\s*$/ {
+              bad = 1
+            }
+            END {
+              exit bad ? 0 : 1
+            }
+          ' CHANGELOG.md; then
+            echo "Released CHANGELOG sections must not contain placeholder bullets ('-')."
+            exit 1
+          fi
+
+          echo "Release precheck passed for version $current_version"
