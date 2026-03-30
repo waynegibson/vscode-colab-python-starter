@@ -1,6 +1,6 @@
 [project]
 name = "case-study-foodhub"
-version = "1.0.0"
+version = "1.0.1"
 description = "case-study-foodhub notebook project"
 requires-python = ">=3.14,<3.15"
 dependencies = [
