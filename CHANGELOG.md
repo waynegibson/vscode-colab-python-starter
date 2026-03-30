@@ -6,6 +6,10 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ## [Unreleased]
 
+### Fixed
+
+- Ruff version update to 0.15.8 to address linting issues.
+
 ## [1.0.0] - 2026-03-30
 
 ### Added
