@@ -14,3 +14,4 @@
 10. Run lint and format before commit.
 11. Strip heavy notebook outputs before submission.
 12. Optionally publish the repo with `gh repo create` after local verification.
+13. Confirm the generated `TEMPLATE_VERSION` file exists for traceability.

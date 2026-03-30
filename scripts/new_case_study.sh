@@ -6,19 +6,29 @@ template_dir="$root_dir/templates/case-study"
 
 usage() {
   cat <<'EOF'
-Usage: ./scripts/new_case_study.sh [--target PARENT_DIR | --path PROJECT_DIR] [--git] <case-study-name>
+Usage: ./scripts/new_case_study.sh [--target PARENT_DIR | --path PROJECT_DIR] [--git] [--no-bootstrap] <case-study-name>
 
 Options:
   --target PARENT_DIR  Create the project inside a custom parent directory.
   --path PROJECT_DIR   Create the project at an exact destination path.
   --git                Initialize a standalone git repository in the generated project.
+  --no-bootstrap       Skip .venv creation, package installs, and kernel registration.
   --help               Show this help message.
 EOF
+}
+
+sed_inplace() {
+  if sed --version >/dev/null 2>&1; then
+    sed -i "$1" "$2"
+  else
+    sed -i '' "$1" "$2"
+  fi
 }
 
 target_parent=""
 target_path=""
 init_git="false"
+bootstrap_env="true"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -42,6 +52,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --git)
       init_git="true"
+      shift
+      ;;
+    --no-bootstrap)
+      bootstrap_env="false"
       shift
       ;;
     --help|-h)
@@ -90,10 +104,13 @@ if [[ ! -d "$template_dir" ]]; then
   exit 1
 fi
 
-python_bin="$(command -v python3.14 || true)"
-if [[ -z "$python_bin" ]]; then
-  echo "python3.14 not found. Install Python 3.14.3 first, then re-run this script."
-  exit 1
+python_bin=""
+if [[ "$bootstrap_env" == "true" ]]; then
+  python_bin="$(command -v python3.14 || true)"
+  if [[ -z "$python_bin" ]]; then
+    echo "python3.14 not found. Install Python 3.14.3 first, then re-run this script."
+    exit 1
+  fi
 fi
 
 if [[ -e "$target_dir" ]]; then
@@ -104,29 +121,47 @@ fi
 mkdir -p "$target_dir"
 cp -R "$template_dir"/. "$target_dir"
 
+template_version="${TEMPLATE_VERSION:-$(git -C "$root_dir" describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0-dev")}"
+template_commit="$(git -C "$root_dir" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
+generated_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
 pushd "$target_dir" >/dev/null
 
 # Keep project metadata unique per case-study.
-sed -i '' "s/^name = \"case-study\"/name = \"$package_name\"/" pyproject.toml
-sed -i '' "s/^description = \"Course case-study notebook project\"/description = \"$name notebook project\"/" pyproject.toml
+sed_inplace "s/^name = \"case-study\"/name = \"$package_name\"/" pyproject.toml
+sed_inplace "s/^description = \"Course case-study notebook project\"/description = \"$name notebook project\"/" pyproject.toml
 
-"$python_bin" -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip setuptools wheel
-python -m pip install -r requirements.txt
-python -m pip install ruff mypy pre-commit nbstripout
-python -m ipykernel install --user --name "$name" --display-name "Python ($name)"
+cat > TEMPLATE_VERSION <<EOF
+template_version=$template_version
+template_commit=$template_commit
+generated_at_utc=$generated_at
+EOF
+
+if [[ "$bootstrap_env" == "true" ]]; then
+  "$python_bin" -m venv .venv
+  source .venv/bin/activate
+  python -m pip install --upgrade pip setuptools wheel
+  python -m pip install -r requirements.txt
+  python -m pip install ruff mypy pre-commit nbstripout
+  python -m ipykernel install --user --name "$name" --display-name "Python ($name)"
+fi
 
 if [[ "$init_git" == "true" ]]; then
   git init >/dev/null
   git branch -M main >/dev/null 2>&1 || true
-  pre-commit install || true
+  if command -v pre-commit >/dev/null 2>&1; then
+    pre-commit install || true
+  fi
 fi
 
 popd >/dev/null
 
 echo "Created case-study at: $target_dir"
 echo "Next: Open that folder directly in VS Code and run notebook environment-check cells first."
+
+if [[ "$bootstrap_env" == "false" ]]; then
+  echo "Bootstrap skipped (--no-bootstrap). Create .venv and install deps before running notebooks locally."
+fi
 
 if [[ "$init_git" == "true" ]]; then
   echo "Git repository initialized."
