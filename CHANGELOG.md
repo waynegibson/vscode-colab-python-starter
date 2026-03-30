@@ -10,18 +10,6 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 
 ### Added
 
--
-
-### Changed
-
--
-
-### Fixed
-
--
-
-### Added
-
 - Template traceability via generated `TEMPLATE_VERSION` file.
 - `--no-bootstrap` option in scaffold script for CI smoke tests.
 - CI workflow for shell linting and scaffold smoke testing.
