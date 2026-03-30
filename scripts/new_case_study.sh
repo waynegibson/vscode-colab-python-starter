@@ -128,8 +128,8 @@ generated_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 pushd "$target_dir" >/dev/null
 
 # Keep project metadata unique per case-study.
-sed_inplace "s/^name = \"case-study\"/name = \"$package_name\"/" pyproject.toml
-sed_inplace "s/^description = \"Course case-study notebook project\"/description = \"$name notebook project\"/" pyproject.toml
+sed_inplace "s/^name = \".*\"/name = \"$package_name\"/" pyproject.toml
+sed_inplace "s/^description = \".*\"/description = \"$name notebook project\"/" pyproject.toml
 
 cat > TEMPLATE_VERSION <<EOF
 template_version=$template_version
