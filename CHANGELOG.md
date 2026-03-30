@@ -14,6 +14,11 @@ The format is based on Keep a Changelog and this project follows Semantic Versio
 - Explicit CI and versioning documentation.
 - Local testing instructions in README.
 - Automated version bump script (`scripts/bump_version.sh`).
+- MIT license (`LICENSE`).
+- Public repository docs (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `SUPPORT.md`).
+- GitHub issue and pull request templates.
+- Release helper script (`scripts/release_prepare.sh`).
+- Tag-driven GitHub release workflow (`.github/workflows/release.yml`).
 
 ## [0.1.0] - 2026-03-30
 

@@ -20,9 +20,10 @@ jobs:
 
       - name: Lint scripts
         run: |
-          shellcheck -s bash -e SC1091 scripts/new_case_study.sh scripts/bump_version.sh
+          shellcheck -s bash -e SC1091 scripts/new_case_study.sh scripts/bump_version.sh scripts/release_prepare.sh
           zsh -n scripts/new_case_study.sh
           zsh -n scripts/bump_version.sh
+          zsh -n scripts/release_prepare.sh
 
       - name: Scaffold smoke test
         run: |
