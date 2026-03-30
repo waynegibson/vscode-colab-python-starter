@@ -54,7 +54,7 @@ jobs:
           grep -q '^template_version=' "$project_dir/TEMPLATE_VERSION"
           grep -q '^template_commit=' "$project_dir/TEMPLATE_VERSION"
           grep -q '^generated_at_utc=' "$project_dir/TEMPLATE_VERSION"
-          grep -q '"python.defaultInterpreterPath": "\${workspaceFolder}/.venv/bin/python"' "$project_dir/.vscode/settings.json"
+          grep -q "\"python.defaultInterpreterPath\": \"\\\${workspaceFolder}/.venv/bin/python\"" "$project_dir/.vscode/settings.json"
           grep -q '"python.languageServer": "Pylance"' "$project_dir/.vscode/settings.json"
           grep -q '"charliermarsh.ruff"' "$project_dir/.vscode/extensions.json"
 
