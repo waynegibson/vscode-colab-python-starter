@@ -1,7 +1,7 @@
 [project]
-name = "case-study"
+name = "case-study-foodhub"
 version = "1.0.0"
-description = "Course case-study notebook project"
+description = "case-study-foodhub notebook project"
 requires-python = ">=3.14,<3.15"
 dependencies = [
   "numpy>=2.2.0",
@@ -15,7 +15,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-  "ruff==0.6.9",
+  "ruff==0.15.8",
   "mypy==1.11.2",
   "pre-commit==3.8.0",
   "nbstripout==0.7.1"
@@ -27,3 +27,4 @@ target-version = "py314"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
